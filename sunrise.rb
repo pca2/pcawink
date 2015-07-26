@@ -13,17 +13,26 @@ end
 client = Wink::Client.new
 br = client.light_bulbs.detect {|k| k.name == 'Bedroom'}
 
-def sunrise(sleep_rate,increment, bulb)
-  level = 0.001
-  until level >= 1 do
-    bulb.dim(level)
-    sleep sleep_rate
-    puts level
-    level += increment
-  end
-end
 
 
 sunrise(1,0.001,br)
 
 
+def get_speed(duration:)
+  #Returns the what level the dim_level is increased each second
+  speed = 1.00 / duration.to_f
+  return speed
+end
+
+def sunrise(duration:, bulb_name:)
+  #How often methodshould pause before
+  sleep_rate = 1
+  dim_level = 0.001
+  speed = get_speed(duration: duration)
+  until dim_level >= 1 do
+    bulb.dim(dim_level)
+    sleep sleep_rate
+    puts dim_level
+    dim_level += speed
+  end
+end
