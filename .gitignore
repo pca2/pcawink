@@ -35,3 +35,4 @@ build/
 .rvmrc
 MY_CREDENTIALS.rb
 wink_history.txt
+*.swp
