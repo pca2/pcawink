@@ -12,6 +12,8 @@ end
 
 @client = Wink::Client.new
 
+CHANGE_FREQ = 7
+
 def get_bulbs()
   @bulbs = {}
   @client.light_bulbs.each do |bulb|
@@ -26,28 +28,41 @@ def set_bulb(bulb_name)
 end
 
 
-#br = client.light_bulbs.detect {|k| k.name == 'Bedroom'}
 
+def get_unit(start_level, end_level, time)
+  #Initially let's give time in minutes
+  #but I guess you could also provide a timestamp and calculate the time
+  
+  #how often we'll be changing the brightness
+  #hard coded as seconds
+  #could also be a param at some point
+  start_level = start_level.to_f
+  end_level = end_level.to_f
+  time = time.to_f
 
+  #This is the number of times we'll make a change
+  change_count = ((time * 60) / CHANGE_FREQ).to_i
+  
+  distance = end_level - start_level
 
-#sunrise(1,0.001,br)
+  change_unit =  distance / change_count
 
+  return {unit: change_unit, count: change_count}
 
-def get_speed(duration:)
-  #Returns the what level the dim_level is increased each second
-  speed = 1.00 / duration.to_f
-  return speed
 end
 
-def sunrise(duration:, bulb_name:)
-  #How often methodshould pause before
-  sleep_rate = 1
-  dim_level = 0.001
-  speed = get_speed(duration: duration)
-  until dim_level >= 1 do
-    bulb.dim(dim_level)
-    sleep sleep_rate
-    puts dim_level
-    dim_level += speed
+
+
+def slowride(bulb, destination, time)
+  bulb.reload
+  current_level = bulb.brightness
+  units = get_unit(current_level,destination, time)
+
+  units[:count].times do
+    current_level += units[:unit]
+    bulb.dim current_level
+    puts "current_level at: #{current_level.to_s}"
+    sleep CHANGE_FREQ
   end
+  puts "All done!"
 end
