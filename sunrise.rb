@@ -10,12 +10,27 @@ Wink.configure do |wink|
   wink.refresh_token = REFRESH_TOKEN
 end
 
-client = Wink::Client.new
-br = client.light_bulbs.detect {|k| k.name == 'Bedroom'}
+@client = Wink::Client.new
+
+def get_bulbs()
+  @bulbs = {}
+  @client.light_bulbs.each do |bulb|
+    bulb_name = bulb.name
+    @bulbs[bulb_name] = {powered: bulb.powered, brightness: bulb.brightness}
+  end
+  return @bulbs
+end
+
+def set_bulb(bulb_name)
+  bulb = @client.light_bulbs.detect {|k| k.name == bulb_name}
+end
+
+
+#br = client.light_bulbs.detect {|k| k.name == 'Bedroom'}
 
 
 
-sunrise(1,0.001,br)
+#sunrise(1,0.001,br)
 
 
 def get_speed(duration:)
