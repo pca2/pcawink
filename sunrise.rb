@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 require 'bundler/setup'
 require 'wink'
-require './MY_CREDENTIALS.rb'
+require './CREDENTIALS.rb'
 
 Wink.configure do |wink|
   wink.client_id     = CLIENT_ID
@@ -12,9 +12,11 @@ end
 
 @client = Wink::Client.new
 
-CHANGE_FREQ = 7
+#The number of seconds we'll sleep between brightness adjustments
+SLEEP_INTERVAL = 7
 
 def get_bulbs()
+  #Return info on all known bulbs 
   @bulbs = {}
   @client.light_bulbs.each do |bulb|
     bulb_name = bulb.name
@@ -24,45 +26,49 @@ def get_bulbs()
 end
 
 def set_bulb(bulb_name)
+  #define a bulb object to a specific var
   bulb = @client.light_bulbs.detect {|k| k.name == bulb_name}
 end
 
 
 
 def get_unit(start_level, end_level, time)
-  #Initially let's give time in minutes
-  #but I guess you could also provide a timestamp and calculate the time
-  
-  #how often we'll be changing the brightness
-  #hard coded as seconds
-  #could also be a param at some point
+  #Calulate the increment of change each time
+  #and the number of changes that will be made
+
+  #level range is 0.01 to 1.
   start_level = start_level.to_f
   end_level = end_level.to_f
+  #Time is in minutes
+  #TODO: add ability to accept time as timestamp and calculate time until then
   time = time.to_f
-
-  #This is the number of times we'll make a change
-  change_count = ((time * 60) / CHANGE_FREQ).to_i
+  
+  #The number of changes to the brightness we'll make
+  change_count = ((time * 60) / SLEEP_INTERVAL).to_i
   
   distance = end_level - start_level
 
-  change_unit =  distance / change_count
+  #The amount we'll change each time
+  change_increment =  distance / change_count
 
-  return {unit: change_unit, count: change_count}
-
+  return {inc: change_increment, count: change_count}
 end
 
 
 
 def slowride(bulb, destination, time)
+  #run the actual dimming
+
+
   bulb.reload
   current_level = bulb.brightness
   units = get_unit(current_level,destination, time)
 
   units[:count].times do
-    current_level += units[:unit]
+    current_level += units[:inc]
     bulb.dim current_level
-    puts "current_level at: #{current_level.to_s}"
-    sleep CHANGE_FREQ
+    puts "current_level of #{bulb.name} at: #{current_level.to_s}"
+    sleep SLEEP_INTERVAL
   end
-  puts "All done!"
+
 end
