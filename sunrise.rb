@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 require 'bundler/setup'
 require 'wink'
-require './CREDENTIALS.rb'
+require_relative 'CREDENTIALS.rb'
 
 Wink.configure do |wink|
   wink.client_id     = CLIENT_ID
@@ -57,6 +57,7 @@ end
 
 
 def slowride(bulb, destination, time)
+  tries = 0
   #run the actual dimming
 
 
@@ -66,7 +67,19 @@ def slowride(bulb, destination, time)
 
   units[:count].times do
     current_level += units[:inc]
-    bulb.dim current_level
+    begin
+      bulb.dim current_level
+    rescue Faraday::TimeoutError
+      tries += 1
+      puts "Faraday error detected."
+      sleep 5
+      if tries <= 2
+        retry
+      else
+        puts "too many erors"
+        exit
+      end
+    end
     puts "current_level of #{bulb.name} at: #{current_level.to_s}"
     sleep SLEEP_INTERVAL
   end
